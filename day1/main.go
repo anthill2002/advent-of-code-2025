@@ -31,34 +31,58 @@ func main() {
 }
 
 func processInput(startPosition int, inputs []string) int {
-	minNumber := 0
-	maxNumber := 99
-	var currentPos int = startPosition
 	passwordHit := 0
+	currentPos := startPosition
 
 	for _, input := range inputs {
-		var direction = input[0:1]
-		var distance, _ = strconv.Atoi(input[1:])
-		if direction == "R" {
-			currentPos += distance
-		} else {
-			currentPos -= distance
+		direction := input[0:1]
+		distance, _ := strconv.Atoi(input[1:])
+
+		if distance >= 100 {
+			newDistance, extraHits := processLargeDistance(distance)
+			distance = newDistance
+			passwordHit += extraHits
 		}
 
-		for currentPos < minNumber || currentPos > maxNumber {
-			if currentPos > maxNumber {
-				currentPos = currentPos - maxNumber - 1
-			} else if currentPos < minNumber {
-				currentPos = maxNumber + currentPos + 1
-			}
-		}
-
-		if currentPos == 0 {
-			passwordHit++
-		}
+		newPos, dialHits := clicker(distance, currentPos, direction)
+		currentPos = newPos
+		passwordHit += dialHits
 	}
 
 	return passwordHit
+}
+
+func processLargeDistance(distance int) (int, int) {
+	passwordHit := 0
+	temp := distance / 100
+	passwordHit += temp
+	distance = distance - (temp * 100)
+	return distance, passwordHit
+}
+
+func clicker(distance int, startPosition int, direction string) (int, int) {
+	currentPos := startPosition
+	minNumber := 0
+	maxNumber := 99
+	passwordHit := 0
+
+	for range max(distance, distance*-1) {
+		if direction == "R" {
+			currentPos++
+		} else {
+			currentPos--
+		}
+
+		if currentPos == maxNumber+1 {
+			currentPos = 0
+			passwordHit++
+		} else if currentPos < minNumber {
+			currentPos = 99
+		} else if currentPos == 0 {
+			passwordHit++
+		}
+	}
+	return currentPos, passwordHit
 }
 
 func readInput(path string) ([]string, error) {
